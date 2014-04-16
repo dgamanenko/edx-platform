@@ -442,39 +442,50 @@ def send_mail_to_student(student, param_dict, language=None):
     email_template_dict = {
         'allowed_enroll': (
             'emails/enroll_email_allowedsubject.txt',
-            'emails/enroll_email_allowedmessage.txt'
+            'emails/enroll_email_allowedmessage.txt',
+            'emails/html/enroll_email_allowedmessage.html'
         ),
         'enrolled_enroll': (
             'emails/enroll_email_enrolledsubject.txt',
-            'emails/enroll_email_enrolledmessage.txt'
+            'emails/enroll_email_enrolledmessage.txt',
+            'emails/html/enroll_email_enrolledmessage.html'
         ),
         'allowed_unenroll': (
             'emails/unenroll_email_subject.txt',
-            'emails/unenroll_email_allowedmessage.txt'
+            'emails/unenroll_email_allowedmessage.txt',
+            'emails/html/unenroll_email_allowedmessage.html'
         ),
         'enrolled_unenroll': (
             'emails/unenroll_email_subject.txt',
-            'emails/unenroll_email_enrolledmessage.txt'
+            'emails/unenroll_email_enrolledmessage.txt',
+            'emails/html/unenroll_email_enrolledmessage.html'
         ),
         'add_beta_tester': (
             'emails/add_beta_tester_email_subject.txt',
-            'emails/add_beta_tester_email_message.txt'
+            'emails/add_beta_tester_email_message.txt',
+            'emails/html/add_beta_tester_email_message.html'
         ),
         'remove_beta_tester': (
             'emails/remove_beta_tester_email_subject.txt',
-            'emails/remove_beta_tester_email_message.txt'
+            'emails/remove_beta_tester_email_message.txt',
+            'emails/html/remove_beta_tester_email_message.html'
         ),
         'account_creation_and_enrollment': (
             'emails/enroll_email_enrolledsubject.txt',
-            'emails/account_creation_and_enroll_emailMessage.txt'
+            'emails/account_creation_and_enroll_emailMessage.txt',
+            'emails/html/account_creation_and_enroll_emailMessage.html'
         ),
     }
 
-    subject_template, message_template = email_template_dict.get(message_type, (None, None))
+    subject_template, message_template, html_template = email_template_dict.get(message_type, (None, None, None))
     if subject_template is not None and message_template is not None:
         subject, message = render_message_to_string(
             subject_template, message_template, param_dict, language=language
         )
+
+    message_html = None
+    if (settings.FEATURES.get('ENABLE_MULTIPART_EMAIL')):
+        message_html = render_to_string(html_template, param_dict)
 
     if subject and message:
         # Remove leading and trailing whitespace from body
@@ -487,7 +498,8 @@ def send_mail_to_student(student, param_dict, language=None):
             settings.DEFAULT_FROM_EMAIL
         )
 
-        send_mail(subject, message, from_address, [student], fail_silently=False)
+        send_mail(subject, message, from_address, [student], fail_silently=False, html_message=message_html)
+
 
 
 def render_message_to_string(subject_template, message_template, param_dict, language=None):

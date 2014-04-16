@@ -1,4 +1,4 @@
-"""
+﻿"""
 Student Views
 """
 
@@ -134,6 +134,16 @@ from util.json_request import JsonResponse
 from util.milestones_helpers import get_pre_requisite_courses_not_completed
 from util.password_policy_validators import validate_password_length, validate_password_strength
 from xmodule.modulestore.django import modulestore
+
+
+
+
+from django.contrib import messages
+from django.core.context_processors import csrf
+from mail import send_mail
+from django.core.urlresolvers import reverse
+from django.core.validators import validate_email, validate_slug, ValidationError
+
 
 log = logging.getLogger("edx.student")
 AUDIT_LOG = logging.getLogger("audit")
@@ -2752,8 +2762,12 @@ def reactivation_email_for_user(user):
     from_address = configuration_helpers.get_value('email_from_address', settings.DEFAULT_FROM_EMAIL)
     from_address = configuration_helpers.get_value('ACTIVATION_EMAIL_FROM_ADDRESS', from_address)
 
+    html_message = None
+    if (settings.FEATURES.get('ENABLE_MULTIPART_EMAIL')):
+        html_message = render_to_string('emails/html/activation_email.html', context)
+
     try:
-        user.email_user(subject, message, from_address)
+        send_mail(subject, message, from_address, [user.email], html_message=html_message)
     except Exception:  # pylint: disable=broad-except
         log.error(
             u'Unable to send reactivation email from "%s" to "%s"',
@@ -2817,13 +2831,16 @@ def do_email_change_request(user, new_email, activation_key=None):
     subject = ''.join(subject.splitlines())
 
     message = render_to_string('emails/email_change.txt', context)
+    message_html = None
+    if (settings.FEATURES.get('ENABLE_MULTIPART_EMAIL')):
+        message_html = render_to_string('emails/html/email_change.html', context)
 
     from_address = configuration_helpers.get_value(
         'email_from_address',
         settings.DEFAULT_FROM_EMAIL
     )
     try:
-        mail.send_mail(subject, message, from_address, [pec.new_email])
+        mail.send_mail(subject, message, from_address, [pec.new_email], html_message=message_html)
     except Exception:  # pylint: disable=broad-except
         log.error(u'Unable to send email activation link to user from "%s"', from_address, exc_info=True)
         raise ValueError(_('Unable to send email activation link. Please try again later.'))
@@ -2872,6 +2889,13 @@ def confirm_email_change(request, key):  # pylint: disable=unused-argument
         message = render_to_string('emails/confirm_email_change.txt', address_context)
         u_prof = UserProfile.objects.get(user=user)
         meta = u_prof.get_meta()
+        message_html = None
+        if (settings.FEATURES.get('ENABLE_MULTIPART_EMAIL')):
+            message_html = render_to_string('emails/html/confirm_email_change.html', address_context)
+        from_address = microsite.get_value(
+            'email_from_address',
+            settings.DEFAULT_FROM_EMAIL
+        )
         if 'old_emails' not in meta:
             meta['old_emails'] = []
         meta['old_emails'].append([user.email, datetime.datetime.now(UTC).isoformat()])
@@ -2882,7 +2906,8 @@ def confirm_email_change(request, key):  # pylint: disable=unused-argument
             user.email_user(
                 subject,
                 message,
-                configuration_helpers.get_value('email_from_address', settings.DEFAULT_FROM_EMAIL)
+                configuration_helpers.get_value('email_from_address', settings.DEFAULT_FROM_EMAIL),
+                html_message=message_html,
             )
         except Exception:    # pylint: disable=broad-except
             log.warning('Unable to send confirmation email to old address', exc_info=True)
@@ -2898,7 +2923,8 @@ def confirm_email_change(request, key):  # pylint: disable=unused-argument
             user.email_user(
                 subject,
                 message,
-                configuration_helpers.get_value('email_from_address', settings.DEFAULT_FROM_EMAIL)
+                configuration_helpers.get_value('email_from_address', settings.DEFAULT_FROM_EMAIL),
+                html_message=message_html,
             )
         except Exception:  # pylint: disable=broad-except
             log.warning('Unable to send confirmation email to new address', exc_info=True)
