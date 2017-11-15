@@ -5,8 +5,6 @@ import re
 from importlib import import_module
 
 from django import forms
-from django.template import loader
-from django.utils.http import int_to_base36
 from django.conf import settings
 from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.hashers import UNUSABLE_PASSWORD_PREFIX
@@ -72,15 +70,8 @@ class PasswordResetFormNoActive(PasswordResetForm):
         # django.contrib.auth.forms.PasswordResetForm directly, which has this import in this place.
         from django.core.mail import send_mail
         for user in self.users_cache:
-
-                site_name = configuration_helpers.get_value(
-                    'SITE_NAME',
-                    settings.SITE_NAME
-                )
-
             context = {
                 'email': user.email,
-                'site_name': site_name,
                 'uid': int_to_base36(user.id),
                 'user': user,
                 'token': token_generator.make_token(user),
@@ -92,7 +83,7 @@ class PasswordResetFormNoActive(PasswordResetForm):
             subject = subject.replace('\n', '')
             email = loader.render_to_string(email_template_name, context)
             email_html = None
-            if (settings.FEATURES.get('ENABLE_MULTIPART_EMAIL')):
+            if settings.FEATURES.get('ENABLE_MULTIPART_EMAIL'):
                 email_html = render_to_string(html_email_template_name, context)
             send_mail(subject, email, from_email, [user.email], html_message=email_html)
 

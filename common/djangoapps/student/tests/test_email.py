@@ -150,7 +150,7 @@ class ActivationEmailTests(TestCase):
 
 
 @patch('student.views.render_to_string', Mock(side_effect=mock_render_to_string, autospec=True))
-@patch('student.views.send_mail')
+@patch('django.core.mail.send_mail')
 class ReactivationEmailTests(EmailTestMixin, TestCase):
     """Test sending a reactivation email to a user"""
 
@@ -330,7 +330,7 @@ class EmailChangeRequestTests(EventTestMixin, TestCase):
         )
 
 
-@patch('student.views.send_mail')
+@patch('django.core.mail.send_mail')
 @patch('student.views.render_to_response', Mock(side_effect=mock_render_to_response, autospec=True))
 @patch('student.views.render_to_string', Mock(side_effect=mock_render_to_string, autospec=True))
 class EmailChangeConfirmationTests(EmailTestMixin, TransactionTestCase):

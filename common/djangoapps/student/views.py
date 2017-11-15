@@ -140,7 +140,6 @@ from xmodule.modulestore.django import modulestore
 
 from django.contrib import messages
 from django.core.context_processors import csrf
-from mail import send_mail
 from django.core.urlresolvers import reverse
 from django.core.validators import validate_email, validate_slug, ValidationError
 
@@ -2892,10 +2891,6 @@ def confirm_email_change(request, key):  # pylint: disable=unused-argument
         message_html = None
         if (settings.FEATURES.get('ENABLE_MULTIPART_EMAIL')):
             message_html = render_to_string('emails/html/confirm_email_change.html', address_context)
-        from_address = microsite.get_value(
-            'email_from_address',
-            settings.DEFAULT_FROM_EMAIL
-        )
         if 'old_emails' not in meta:
             meta['old_emails'] = []
         meta['old_emails'].append([user.email, datetime.datetime.now(UTC).isoformat()])
