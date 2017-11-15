@@ -1,5 +1,6 @@
 <%! from django.core.urlresolvers import reverse %>
 <%! from django.utils.translation import ugettext as _ %>
+<%! from edxmako.shortcuts import render_to_string, marketing_link %>
 <%namespace file="../../main.html" import="stanford_theme_enabled" />
 ## Again, ugly hack that needs to be changed
 <%inherit file="one_content_box.html" />
@@ -20,15 +21,17 @@ ${_("This is to confirm that you changed the e-mail associated with "
       "information is listed at:").format(platform_name=settings.PLATFORM_NAME, old_email=old_email, new_email=new_email)}
 <br/>
 <br/>
-% if stanford_theme_enabled():
- ${settings.CONTACT_EMAIL}
- % else:
-   % if is_secure:
-    https://${ site }${reverse('contact')}
-  % else:
-    http://${ site }${reverse('contact')}
-  % endif
+
+% if settings.FEATURES['ENABLE_MKTG_SITE']:
+    ${marketing_link('CONTACT')}
+% else:
+    % if is_secure:
+        https://${ site }${reverse('contact')}
+    % else:
+        http://${ site }${reverse('contact')}
+    % endif
 % endif
+
 <br/>
 <br/>
 ${_("We keep a log of old e-mails, so if this request was unintentional, we "

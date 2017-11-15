@@ -1,4 +1,5 @@
-<%! from microsite_configuration.middleware import microsite %>
+<%! from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers %>
+
 <em>Copyright © 2013 edX, All rights reserved.</em><br>
 <br>
 <br>
@@ -8,8 +9,5 @@
   Cambridge, MA, USA 02142<br>
 <br>
 <br>
-This email was automatically sent from ${microsite.get_value(
-        'platform_name',
-        settings.PLATFORM_NAME
-    )
-  }. <br>
+This email was automatically sent from ${configuration_helpers.get_value('platform_name', settings.PLATFORM_NAME)}.
+<br>
