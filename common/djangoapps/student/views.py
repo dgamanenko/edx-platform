@@ -18,7 +18,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.auth.views import password_reset_confirm
-from django.core import mail
+from django.core.mail import send_mail
 from django.template.context_processors import csrf
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.urlresolvers import NoReverseMatch, reverse, reverse_lazy
@@ -134,14 +134,6 @@ from util.json_request import JsonResponse
 from util.milestones_helpers import get_pre_requisite_courses_not_completed
 from util.password_policy_validators import validate_password_length, validate_password_strength
 from xmodule.modulestore.django import modulestore
-
-
-
-
-from django.contrib import messages
-from django.core.context_processors import csrf
-from django.core.urlresolvers import reverse
-from django.core.validators import validate_email, validate_slug, ValidationError
 
 
 log = logging.getLogger("edx.student")
@@ -2762,7 +2754,7 @@ def reactivation_email_for_user(user):
     from_address = configuration_helpers.get_value('ACTIVATION_EMAIL_FROM_ADDRESS', from_address)
 
     html_message = None
-    if (settings.FEATURES.get('ENABLE_MULTIPART_EMAIL')):
+    if settings.FEATURES.get('ENABLE_MULTIPART_EMAIL'):
         html_message = render_to_string('emails/html/activation_email.html', context)
 
     try:
@@ -2831,7 +2823,7 @@ def do_email_change_request(user, new_email, activation_key=None):
 
     message = render_to_string('emails/email_change.txt', context)
     message_html = None
-    if (settings.FEATURES.get('ENABLE_MULTIPART_EMAIL')):
+    if settings.FEATURES.get('ENABLE_MULTIPART_EMAIL'):
         message_html = render_to_string('emails/html/email_change.html', context)
 
     from_address = configuration_helpers.get_value(
@@ -2839,7 +2831,7 @@ def do_email_change_request(user, new_email, activation_key=None):
         settings.DEFAULT_FROM_EMAIL
     )
     try:
-        mail.send_mail(subject, message, from_address, [pec.new_email], html_message=message_html)
+        send_mail(subject, message, from_address, [pec.new_email], html_message=message_html)
     except Exception:  # pylint: disable=broad-except
         log.error(u'Unable to send email activation link to user from "%s"', from_address, exc_info=True)
         raise ValueError(_('Unable to send email activation link. Please try again later.'))
