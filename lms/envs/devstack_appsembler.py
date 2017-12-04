@@ -1,6 +1,8 @@
 # devstack_appsembler.py
 
 import os
+import sys
+
 from .devstack import *
 from .appsembler import *
 
@@ -121,4 +123,22 @@ try:
 except ImportError:
     pass
 
+# Support django-webpack-loader
 
+# Anticipate edX supporting webpack loader (it is in their development pipeline)
+this = sys.modules[__name__]
+if not hasattr(this, 'WEBPACK_LOADER'):
+    setattr(this, 'WEBPACK_LOADER', {})
+
+# Initial implementation hardcodes edx_figures. Upcoming, plan to dynamically
+# load modules that are registered in lms.env.json.
+try:
+    from edx_figures import settings as edx_figures_settings
+
+    WEBPACK_LOADER['EDX_FIGURES_APP'] = {
+        'BUNDLE_DIR_NAME': edx_figures_settings.webpack_bundle_dir_name,
+        'STATS_FILE': edx_figures_settings.webpack_stats_file
+    }
+except ImportError:
+    print('ImportError, unable to import edx_figures settings')
+    pass

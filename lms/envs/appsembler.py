@@ -1,3 +1,4 @@
+
 import os
 import json
 
@@ -19,8 +20,21 @@ INTERCOM_API_KEY = APPSEMBLER_FEATURES.get('INTERCOM_API_KEY', os.environ.get('I
 INTERCOM_USER_EMAIL = APPSEMBLER_FEATURES.get('INTERCOM_USER_EMAIL', os.environ.get('INTERCOM_USER_EMAIL', ''))
 
 
+# We keep  'APPSEMBLER_REPORTING' until after we've deployed edx-figure to 
+# production and proven it
 if APPSEMBLER_FEATURES.get('ENABLE_APPSEMBLER_REPORTING', False):
     from appsembler_reporting.settings import APPSEMBLER_REPORTING
 
+    # This will just merge and update top level keys/values
     APPSEMBLER_REPORTING.update(APPSEMBLER_FEATURES.get(
         'APPSEMBLER_REPORTING', {} ))
+
+# Monkeypatch edx_figures settings from env/json
+if ENV_TOKENS.get('EDX_FIGURES', {}).get('ENABLED', False):
+    try:
+        from edx_figures.settings import EDX_FIGURES
+
+        # This will just merge and update top level keys/values
+        EDX_FIGURES.update(ENV_TOKENS.get('EDX_FIGURES',{}))
+    except ImportError:
+        pass
